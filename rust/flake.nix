@@ -11,6 +11,11 @@
       url = "github:numtide/treefmt-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    rust-overlay = {
+      url = "github:oxalica/rust-overlay";
+      flake = false;
+    };
   };
 
   outputs = inputs:
@@ -26,23 +31,33 @@
         "x86_64-linux"
       ];
 
-      perSystem = { pkgs, ... }: {
-        treefmt = {
-          projectRootFile = "flake.nix";
-          programs.nixpkgs-fmt.enable = true;
-          programs.rustfmt.enable = true;
-        };
-
-        devShells.default = pkgs.mkShell {
-          packages = with pkgs; [
-            cargo
-            clippy
-            rustc
-            rustfmt
+      perSystem = { pkgs, system, ... }:
+        let
+          rust-bin = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
+        in
+        {
+          imports = [
+            "${inputs.nixpkgs}/nixos/modules/misc/nixpkgs.nix"
           ];
 
-          RUST_SRC_PATH = pkgs.rustPlatform.rustLibSrc;
+          nixpkgs = {
+            hostPlatform = system;
+            overlays = [
+              (import inputs.rust-overlay)
+            ];
+          };
+
+          treefmt = {
+            projectRootFile = "flake.nix";
+            programs.nixpkgs-fmt.enable = true;
+            programs.rustfmt.enable = true;
+          };
+
+          devShells.default = pkgs.mkShell {
+            packages = [
+              rust-bin
+            ];
+          };
         };
-      };
     };
 }
