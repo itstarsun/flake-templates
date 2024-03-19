@@ -50,7 +50,10 @@
           treefmt = {
             projectRootFile = "flake.nix";
             programs.nixpkgs-fmt.enable = true;
-            programs.rustfmt.enable = true;
+            programs.rustfmt = {
+              enable = true;
+              package = rust-bin;
+            };
           };
 
           devShells.default = pkgs.mkShell {
