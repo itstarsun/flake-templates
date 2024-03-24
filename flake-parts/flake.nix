@@ -26,13 +26,17 @@
         "x86_64-linux"
       ];
 
-      perSystem = { pkgs, ... }: {
+      perSystem = { config, pkgs, ... }: {
         treefmt = {
           projectRootFile = "flake.nix";
           programs.nixpkgs-fmt.enable = true;
         };
 
-        devShells.default = pkgs.mkShell { };
+        devShells.default = pkgs.mkShell {
+          inputsFrom = [
+            config.treefmt.build.devShell
+          ];
+        };
       };
     };
 }

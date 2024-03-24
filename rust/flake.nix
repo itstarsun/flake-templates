@@ -31,7 +31,7 @@
         "x86_64-linux"
       ];
 
-      perSystem = { pkgs, system, ... }:
+      perSystem = { config, pkgs, system, ... }:
         let
           rust-bin = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
         in
@@ -57,6 +57,10 @@
           };
 
           devShells.default = pkgs.mkShell {
+            inputsFrom = [
+              config.treefmt.build.devShell
+            ];
+
             packages = [
               rust-bin
             ];
