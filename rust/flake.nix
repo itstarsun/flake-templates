@@ -14,7 +14,7 @@
 
     rust-overlay = {
       url = "github:oxalica/rust-overlay";
-      flake = false;
+      flake = false; # avoid unnecessary dependencies
     };
   };
 
@@ -33,7 +33,13 @@
 
       perSystem = { config, pkgs, system, ... }:
         let
-          rust-bin = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
+          rustToolchain =
+            pkgs.rust-bin.selectLatestNightlyWith
+              (toolchain: toolchain.default.override {
+                extensions = [
+                  "rust-src"
+                ];
+              });
         in
         {
           imports = [
@@ -52,7 +58,7 @@
             programs.nixpkgs-fmt.enable = true;
             programs.rustfmt = {
               enable = true;
-              package = rust-bin;
+              package = rustToolchain;
             };
           };
 
@@ -62,7 +68,7 @@
             ];
 
             packages = [
-              rust-bin
+              rustToolchain
             ];
           };
         };
