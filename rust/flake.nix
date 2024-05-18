@@ -16,6 +16,11 @@
       url = "github:oxalica/rust-overlay";
       flake = false; # avoid unnecessary dependencies
     };
+
+    crane = {
+      url = "github:ipetkov/crane";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = inputs:
@@ -31,7 +36,7 @@
         "x86_64-linux"
       ];
 
-      perSystem = { config, pkgs, system, ... }:
+      perSystem = { lib, config, pkgs, system, ... }:
         let
           rustToolchain =
             pkgs.rust-bin.selectLatestNightlyWith
@@ -40,6 +45,8 @@
                   "rust-src"
                 ];
               });
+
+          craneLib = (inputs.crane.mkLib pkgs).overrideToolchain rustToolchain;
         in
         {
           imports = [
@@ -61,6 +68,20 @@
               package = rustToolchain;
             };
           };
+
+          packages.default =
+            craneLib.buildPackage {
+              src = lib.fileset.toSource {
+                root = ./.;
+                fileset = lib.fileset.unions [
+                  ./src
+                  ./Cargo.lock
+                  ./Cargo.toml
+                ];
+              };
+
+              strictDeps = true;
+            };
 
           devShells.default = pkgs.mkShell {
             inputsFrom = [
